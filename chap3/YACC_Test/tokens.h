@@ -51,7 +51,8 @@ extern YYSTYPE yylval;
 # define FUNCTION 297
 # define VAR 298
 # define TYPE 299
-# define TYPEID 300
+# define STRING_KEYWORD 300 	// 新增的关键字 string 的标记
+# define INT_KEYWORD 301  		// 新增的关键字 int 的标记
 
 #endif
 

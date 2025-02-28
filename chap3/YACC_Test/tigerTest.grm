@@ -1,0 +1,83 @@
+%{
+#include <stdio.h>
+#include "util.h"
+#include "errormsg.h"
+
+int yylex(void); /* function prototype */
+
+void yyerror(char *s)
+{
+ EM_error(EM_tokPos, "%s", s);
+}
+
+/* 定义调试模式的宏 */
+#define DEBUG
+#ifdef DEBUG
+#define DEBUG_PRINT(...) printf(__VA_ARGS__)
+#else
+#define DEBUG_PRINT(...)
+#endif
+
+//#define YYDEBUG 1
+//int yydebug = 1;
+%}
+
+
+%union {
+	int pos;
+	int ival;
+	string sval;
+	}
+
+%token <sval> ID STRING 
+%token <ival> INT
+
+%token 
+  COMMA COLON SEMICOLON LPAREN RPAREN LBRACK RBRACK 
+  LBRACE RBRACE DOT 
+  PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE
+  AND OR ASSIGN
+  ARRAY IF THEN ELSE WHILE FOR TO DO LET IN END OF 
+  BREAK NIL
+  FUNCTION VAR TYPE
+
+%start program
+
+%nonassoc ASSIGN
+%left OR
+%left AND
+%left EQ NEQ
+%left LT LE GT GE
+%left PLUS MINUS
+%left TIMES DIVIDE
+
+%%
+
+/* 语法规则部分 */
+
+program: exprs
+
+/* lvalue 规则：处理左值 */
+lvalue: ID { DEBUG_PRINT("Parsed identifier\n"); }
+      | lvalue DOT ID { DEBUG_PRINT("Parsed record access\n"); }
+      | lvalue LBRACK expr RBRACK { DEBUG_PRINT("Parsed array access\n"); }
+
+/* exprs 规则：处理多个表达式 */
+exprs: expr SEMICOLON exprs 
+     | expr
+     ;
+expr: lvalue ASSIGN expr { 
+        DEBUG_PRINT("Parsed assignment\n"); 
+    }
+    | ID { DEBUG_PRINT("Parsed identifier\n"); }
+    | INT { DEBUG_PRINT("Parsed integer\n"); }
+    | IF expr THEN expr ELSE expr { DEBUG_PRINT("Parsed if-then-else\n"); }
+    | WHILE expr DO expr { DEBUG_PRINT("Parsed while loop\n"); }
+    | FOR ID ASSIGN expr TO expr DO expr { DEBUG_PRINT("Parsed for loop\n"); }
+    | STRING { DEBUG_PRINT("Parsed string\n"); }
+    | LPAREN expr RPAREN { DEBUG_PRINT("Parsed parenthesized expression\n"); }
+    ; 
+
+/* type_files_exprs 规则：处理type_files中多个表达式 */
+type_files_exprs: expr
+                | expr COMMA type_files_exprs

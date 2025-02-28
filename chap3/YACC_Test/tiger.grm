@@ -1,0 +1,150 @@
+%{
+#include <stdio.h>
+#include "util.h"
+#include "errormsg.h"
+
+int yylex(void); /* function prototype */
+
+void yyerror(char *s)
+{
+ EM_error(EM_tokPos, "%s", s);
+}
+
+/* 定义调试模式的宏 */
+#define DEBUG
+#ifdef DEBUG
+#define DEBUG_PRINT(...) printf(__VA_ARGS__)
+#else
+#define DEBUG_PRINT(...)
+#endif
+
+//#define YYDEBUG 1
+//int yydebug = 1;
+%}
+
+
+%union {
+	int pos;
+	int ival;
+	string sval;
+	}
+
+%token <sval> ID STRING 
+%token <ival> INT
+
+%token 
+  COMMA COLON SEMICOLON LPAREN RPAREN LBRACK RBRACK 
+  LBRACE RBRACE DOT 
+  PLUS MINUS TIMES DIVIDE EQ NEQ LT LE GT GE
+  AND OR ASSIGN
+  ARRAY IF THEN ELSE WHILE FOR TO DO LET IN END OF 
+  BREAK NIL
+  FUNCTION VAR TYPE
+
+/* 定义运算符优先级和结合性 */
+%left OR
+%left AND
+%left EQ NEQ LT LE GT GE
+%left PLUS MINUS
+%left TIMES DIVIDE
+%right ASSIGN
+
+%start program
+
+%%
+
+/* program 规则：表示整个程序的起始符号 */
+program: let_decls in_exprs END { DEBUG_PRINT("Parsed program\n"); }
+
+/* let_decls 规则：处理 let 声明 */
+let_decls: LET decls { DEBUG_PRINT("Parsed let declarations\n"); }
+
+/* decls 规则：处理多个声明 */
+decls: decls decl
+     | decl
+     ;
+
+/* decl 规则：处理单个声明 */
+decl: var_decl
+    | type_decl
+    | function_decl
+    ;
+
+/* var_decl 规则：处理变量声明 */
+var_decl: VAR ID ASSIGN expr { DEBUG_PRINT("Parsed variable declaration\n"); }
+        | VAR ID COLON ID ASSIGN expr { DEBUG_PRINT("Parsed typed variable declaration\n"); }
+        ;
+
+/* type_decl 规则：处理类型声明 */
+type_decl: TYPE ID EQ type_expr { DEBUG_PRINT("Parsed type declaration\n"); }
+         ;
+
+/* type_expr 规则：处理类型表达式 */
+type_expr: ID { DEBUG_PRINT("Parsed type_expr type\n"); }
+         | ARRAY OF ID
+         | LBRACE type_files RBRACE
+         ;
+
+/* type_files 规则：处理冒号声明的类型 */
+type_files: ID COLON ID { DEBUG_PRINT("Parsed type_files type\n"); }
+          | ID COLON ID COMMA type_files
+          ;
+          
+/* function_decl 规则：处理函数声明 */
+function_decl: FUNCTION ID LPAREN type_files RPAREN EQ expr { DEBUG_PRINT("Parsed function declaration\n"); }
+             | FUNCTION ID LPAREN type_files RPAREN COLON ID EQ expr
+             ;
+
+/* type_files_exprs 规则：处理type_files中多个表达式 */
+type_files_exprs: key_value_expr
+                | key_value_expr COMMA type_files_exprs
+                ;
+
+key_value_expr: ID EQ expr { DEBUG_PRINT("Parsed key-value expression\n"); }
+
+
+/* lvalue 规则：处理左值 */
+lvalue: ID { DEBUG_PRINT("Parsed identifier\n"); }
+      | lvalue DOT ID { DEBUG_PRINT("Parsed record access\n"); }
+      | lvalue LBRACK expr RBRACK { DEBUG_PRINT("Parsed array access\n"); }
+      | array
+      ;
+
+array: ID LBRACK expr RBRACK
+
+/* in_exprs 规则：处理 in 表达式 */
+in_exprs: IN exprs { DEBUG_PRINT("Parsed in expressions\n"); }
+        ;
+
+/* exprs 规则：处理多个表达式 */
+exprs: expr SEMICOLON exprs 
+     | expr
+     ;
+
+/* expr 规则：处理单个表达式 */
+expr: lvalue ASSIGN expr { DEBUG_PRINT("Parsed assignment\n"); }
+    | expr PLUS expr { DEBUG_PRINT("Parsed addition\n"); }
+    | expr MINUS expr { DEBUG_PRINT("Parsed subtraction\n"); }
+    | expr TIMES expr { DEBUG_PRINT("Parsed multiplication\n"); }
+    | expr DIVIDE expr { DEBUG_PRINT("Parsed division\n"); }
+    | expr EQ expr { DEBUG_PRINT("Parsed equality\n"); }
+    | expr NEQ expr { DEBUG_PRINT("Parsed inequality\n"); }
+    | expr LT expr { DEBUG_PRINT("Parsed less than\n"); }
+    | expr LE expr { DEBUG_PRINT("Parsed less than or equal\n"); }
+    | expr GT expr { DEBUG_PRINT("Parsed greater than\n"); }
+    | expr GE expr { DEBUG_PRINT("Parsed greater than or equal\n"); }
+    | expr AND expr { DEBUG_PRINT("Parsed logical and\n"); }
+    | expr OR expr { DEBUG_PRINT("Parsed logical or\n"); }
+    | IF expr THEN expr ELSE expr { DEBUG_PRINT("Parsed if-then-else\n"); }
+    | WHILE expr DO expr { DEBUG_PRINT("Parsed while loop\n"); }
+    | FOR ID ASSIGN expr TO expr DO expr { DEBUG_PRINT("Parsed for loop\n"); }
+    | LET decls IN exprs END { DEBUG_PRINT("Parsed let expression\n"); }
+    | INT { DEBUG_PRINT("Parsed integer\n"); }
+    | STRING { DEBUG_PRINT("Parsed string\n"); }
+    | LPAREN expr RPAREN { DEBUG_PRINT("Parsed parenthesized expression\n"); }
+    | array OF expr { DEBUG_PRINT("Parsed array creation\n"); }
+    | ID LBRACE type_files_exprs RBRACE { DEBUG_PRINT("Parsed type_files exprs\n"); }
+    ;
+
+
+

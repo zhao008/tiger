@@ -17,7 +17,9 @@ int yyleng; extern unsigned char yytext[];
 int yymorfg;
 extern unsigned char *yysptr, yysbuf[];
 int yytchar;
-FILE *yyin = {stdin}, *yyout = {stdout};
+int yylook(void);
+int yyback(int *p, int m);
+extern FILE *yyin , *yyout;
 extern int yylineno;
 struct yysvf { 
 	struct yywork *yystoff;
@@ -28,8 +30,8 @@ extern struct yysvf yysvec[], *yybgin;
 /* Copyright (c) 1997 Andrew W. Appel.  Licensed software: see LICENSE file */
 #include <string.h>
 #include "util.h"
-#include "symbol.h"
-#include "absyn.h"
+//#include "symbol.h"
+//#include "absyn.h"
 #include "y.tab.h"
 #include "errormsg.h"
 
@@ -74,7 +76,7 @@ void adjust(void)
 # define S 4
 # define F 6
 # define YYNEWLINE 10
-yylex(){
+int yylex(){
 int nstr; extern int yyprevious;
 while((nstr = yylook()) >= 0)
 yyfussy: switch(nstr){
@@ -1072,6 +1074,7 @@ unsigned char yyextra[] = {
 int yylineno =1;
 # define YYU(x) x
 # define NLSTATE yyprevious=YYNEWLINE
+# define LEXDEBUG 1
 unsigned char yytext[YYLMAX];
 struct yysvf *yylstate [YYLMAX], **yylsp, **yyolsp;
 unsigned char yysbuf[YYLMAX];
@@ -1079,7 +1082,7 @@ unsigned char *yysptr = yysbuf;
 int *yyfnd;
 extern struct yysvf *yyestate;
 int yyprevious = YYNEWLINE;
-yylook(){
+int yylook(){
 	register struct yysvf *yystate, **lsp;
 	register struct yywork *yyt;
 	struct yysvf *yyz;
@@ -1091,7 +1094,8 @@ yylook(){
 	unsigned char *yylastch;
 	/* start off machines */
 # ifdef LEXDEBUG
-	debug = 0;
+	//debug = 0;
+	debug = 1;
 # endif
 	yyfirst=1;
 	if (!yymorfg)
@@ -1227,8 +1231,7 @@ yylook(){
 # endif
 		}
 	}
-yyback(p, m)
-	int *p;
+int yyback(int *p, int m)
 {
 if (p==0) return(0);
 while (*p)
@@ -1239,14 +1242,14 @@ while (*p)
 return(0);
 }
 	/* the following are only used in the lex library */
-yyinput(){
+int yyinput(){
 	return(input());
 	}
-yyoutput(c)
+int yyoutput(c)
   int c; {
 	output(c);
 	}
-yyunput(c)
+int yyunput(c)
    int c; {
 	unput(c);
 	}

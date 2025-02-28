@@ -1,6 +1,6 @@
 lextest: driver.o lex.yy.o errormsg.o util.o
 	cc -g -o lextest driver.o lex.yy.o errormsg.o util.o
-	./lextest test39.tig
+	./lextest test1.tig
 
 driver.o: driver.c tokens.h errormsg.h util.h
 	cc -g -c driver.c
@@ -18,4 +18,4 @@ util.o: util.c util.h
 	cc -g -c util.c
 
 clean: 
-	rm -f a.out util.o driver.o lex.yy.o lex.yy.c errormsg.o
+	rm -f lextest util.o driver.o lex.yy.o lex.yy.c errormsg.o

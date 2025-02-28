@@ -15,12 +15,12 @@ string toknames[] = {
 "MINUS", "TIMES", "DIVIDE", "EQ", "NEQ", "LT", "LE", "GT", "GE",
 "AND", "OR", "ASSIGN", "ARRAY", "IF", "THEN", "ELSE", "WHILE", "FOR",
 "TO", "DO", "LET", "IN", "END", "OF", "BREAK", "NIL", "FUNCTION",
-"VAR", "TYPE","STRING_KEYWORD", "INT_KEYWORD"  // 新增的关键字 int 的标记
+"VAR", "TYPE", "TYPEID"
 };
 
 
 string tokname(int tok) {
-  return tok<257 || tok>301 ? "BAD_TOKEN" : toknames[tok-257];
+  return tok<257 || tok>300 ? "BAD_TOKEN" : toknames[tok-257];
 }
 
 int main(int argc, char **argv) {
